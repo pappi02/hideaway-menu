@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-charcoal: #1a1a1a;
+  --color-charcoal-light: #2a2a2a;
+  --color-ivory: #faf8f5;
+  --color-cream: #f5f0e8;
+  --color-paper: #f0ebe3;
+  --color-espresso: #3d2b1f;
+  --color-espresso-light: #5c4033;
+  --color-champagne: #c9a96e;
+  --color-champagne-muted: #b8956a;
+  --color-warm-gray: #8a8279;
+  --color-warm-gray-light: #b5ada4;
+  --color-warm-gray-dark: #5f584e;
+  --color-gold-deep: #7a5c26;
+
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --shadow-page: 0 4px 20px rgba(0,0,0,0.15);
+  --shadow-page-hover: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-charcoal);
+    color: var(--color-charcoal);
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .page-paper {
+    background: linear-gradient(135deg, var(--color-ivory) 0%, var(--color-cream) 100%);
+    box-shadow: var(--shadow-page);
+  }
+
+  .book-viewport {
+    perspective: 1800px;
+    transform-style: preserve-3d;
+    isolation: isolate;
+    touch-action: pan-y;
+  }
+
+  .book-page-sheet {
+    width: 100%;
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    transition: transform 650ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: transform;
+  }
+
+  .text-display {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .text-body {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .text-meta {
+    font-family: var(--font-sans);
+    font-weight: 300;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .price {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+
+  .menu-item-name {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: -0.01em;
+  }
+
+  .menu-item-desc {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .page-edge {
+    box-shadow:
+      inset -1px 0 2px rgba(0,0,0,0.05),
+      inset 1px 0 2px rgba(255,255,255,0.3);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
