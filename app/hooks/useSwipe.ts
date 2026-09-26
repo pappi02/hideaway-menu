@@ -1,80 +1,78 @@
 'use client';
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useEffect, type RefObject } from 'react';
 
-interface SwipeOptions {
-  onSwipeLeft?: () => void;
-  onSwipeRight?: () => void;
+interface Options {
+  onNext?: () => void;
+  onPrev?: () => void;
+  /** Minimum horizontal travel, in CSS pixels, before a swipe counts. */
   threshold?: number;
   enabled?: boolean;
 }
 
-export function useSwipe({
-  onSwipeLeft,
-  onSwipeRight,
-  threshold = 60,
-  enabled = true,
-}: SwipeOptions) {
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const touchEnd = useRef<{ x: number; y: number } | null>(null);
-  const isDragging = useRef(false);
-  const enabledRef = useRef(enabled);
-  enabledRef.current = enabled;
-
-  const onTouchStart = useCallback((e: TouchEvent) => {
-    if (!enabledRef.current) return;
-    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    touchEnd.current = null;
-    isDragging.current = true;
-  }, []);
-
-  const onTouchMove = useCallback((e: TouchEvent) => {
-    if (!enabledRef.current || !isDragging.current || !touchStart.current) return;
-    touchEnd.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-
-    const diffX = Math.abs(touchEnd.current.x - touchStart.current.x);
-    const diffY = Math.abs(touchEnd.current.y - touchStart.current.y);
-
-    if (diffX > diffY && diffX > 10) {
-      e.preventDefault();
-    }
-  }, []);
-
-  const onTouchEnd = useCallback(() => {
-    if (!enabledRef.current || !touchStart.current || !touchEnd.current) {
-      isDragging.current = false;
-      touchStart.current = null;
-      touchEnd.current = null;
-      return;
-    }
-
-    const diffX = touchStart.current.x - touchEnd.current.x;
-    const diffY = touchStart.current.y - touchEnd.current.y;
-    const absX = Math.abs(diffX);
-    const absY = Math.abs(diffY);
-
-    if (absX > absY && absX > threshold) {
-      if (diffX > 0) {
-        onSwipeLeft?.();
-      } else {
-        onSwipeRight?.();
-      }
-    }
-
-    isDragging.current = false;
-    touchStart.current = null;
-    touchEnd.current = null;
-  }, [onSwipeLeft, onSwipeRight, threshold]);
-
+/**
+ * Horizontal swipe detection, scoped to the book itself.
+ *
+ * The previous version bound to `document` and called `preventDefault` on any
+ * touchmove with horizontal intent, which suppressed gestures across the whole
+ * page including inside the contents drawer. Binding to the element means the
+ * drawer, links and buttons keep their native behaviour.
+ */
+export function useSwipe(
+  ref: RefObject<HTMLElement | null>,
+  { onNext, onPrev, threshold = 55, enabled = true }: Options,
+) {
   useEffect(() => {
-    document.addEventListener('touchstart', onTouchStart, { passive: true });
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    const node = ref.current;
+    if (!node || !enabled) return;
+
+    let startX = 0;
+    let startY = 0;
+    let startedAt = 0;
+    let horizontal: boolean | null = null;
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startedAt = Date.now();
+      horizontal = null;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
+      // Decide the gesture's axis once, then stick with it.
+      if (horizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        horizontal = Math.abs(dx) > Math.abs(dy);
+      }
+      if (horizontal) e.preventDefault();
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!horizontal) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - startX;
+      const elapsed = Date.now() - startedAt;
+
+      // A short, fast flick counts even when it falls short of the threshold.
+      const flick = elapsed < 300 && Math.abs(dx) > 28;
+      if (Math.abs(dx) < threshold && !flick) return;
+
+      if (dx < 0) onNext?.();
+      else onPrev?.();
+    };
+
+    node.addEventListener('touchstart', onTouchStart, { passive: true });
+    node.addEventListener('touchmove', onTouchMove, { passive: false });
+    node.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return () => {
-      document.removeEventListener('touchstart', onTouchStart);
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend', onTouchEnd);
+      node.removeEventListener('touchstart', onTouchStart);
+      node.removeEventListener('touchmove', onTouchMove);
+      node.removeEventListener('touchend', onTouchEnd);
     };
-  }, [onTouchStart, onTouchMove, onTouchEnd]);
+  }, [ref, onNext, onPrev, threshold, enabled]);
 }

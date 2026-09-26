@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "next dev -p 5000",
     "build": "next build",
-    "start": "next start -p 5000"
+    "start": "next start -p 5000",
+    "check": "node --experimental-strip-types --no-warnings=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/ts-resolve.mjs scripts/check-pagination.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "images": "node scripts/optimise-images.mjs"
   },
   "dependencies": {
     "next": "16.3.4",
@@ -18,6 +21,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "postcss": "^8.5.0",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0"
   }

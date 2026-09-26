@@ -1,90 +1,117 @@
 'use client';
 
-import { tableOfContents } from '../data/menuData';
+import { useEffect, useRef } from 'react';
+import { venue } from '../data/venue';
+import type { ContentsEntry } from '../types/menu';
+import { Hairline } from './Ornament';
 
-interface ContentsDrawerProps {
-  currentPage: number;
+interface Props {
+  open: boolean;
+  onClose: () => void;
   onNavigate: (pageIndex: number) => void;
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+  /** Contents of the edition currently on screen — the two paginate differently. */
+  entries: ContentsEntry[];
+  currentPageIndex: number;
 }
 
-export function ContentsDrawer({ currentPage, onNavigate, isOpen, onOpenChange }: ContentsDrawerProps) {
-  const handleNavigate = (pageIndex: number) => {
-    onNavigate(pageIndex);
-    onOpenChange(false);
-  };
+/**
+ * Quick navigation. The book carries a printed contents page too; this is the
+ * shortcut for a guest who already knows what they are after.
+ *
+ * Focus is moved into the drawer on open and returned to whatever opened it on
+ * close, and Tab is kept inside while it is up — none of which the previous
+ * drawer did, so keyboard users could tab straight through into the hidden
+ * pages behind it.
+ */
+export function ContentsDrawer({ open, onClose, onNavigate, entries, currentPageIndex }: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const restoreTo = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    restoreTo.current = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    panel?.querySelector<HTMLElement>('button')?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab' || !panel) return;
+
+      const focusable = panel.querySelectorAll<HTMLElement>('button, [href]');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      restoreTo.current?.focus();
+    };
+  }, [open, onClose]);
 
   return (
     <>
-      <button
-        onClick={() => onOpenChange(!isOpen)}
-        className="absolute top-4 right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full
-                   bg-charcoal/60 text-ivory backdrop-blur-sm hover:bg-charcoal/80 transition-all duration-200
-                   active:scale-95"
-        aria-label={isOpen ? 'Close contents' : 'Open contents'}
-        aria-expanded={isOpen}
-      >
-        {isOpen ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        )}
-      </button>
-
-      {isOpen && (
-        <div
-          className="absolute inset-0 z-40 bg-charcoal/80 backdrop-blur-sm transition-opacity"
-          onClick={() => onOpenChange(false)}
-        />
-      )}
+      <div
+        className={`drawer-scrim${open ? ' is-open' : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       <div
-        className={`absolute top-0 right-0 h-full w-72 max-w-[80vw] z-50 bg-ivory shadow-2xl
-                    transform transition-transform duration-300 ease-out
-                    ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-        aria-hidden={!isOpen}
-        inert={!isOpen || undefined}
+        ref={panelRef}
+        className={`drawer${open ? ' is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu contents"
+        inert={!open || undefined}
       >
-        <div className="h-full flex flex-col p-6">
-          <div className="mb-6">
-            <h3 className="text-display text-xl text-charcoal mb-1">Contents</h3>
-            <div className="w-8 h-px bg-champagne" />
-          </div>
+        <div className="drawer-head">
+          <p className="t-eyebrow drawer-eyebrow">{venue.name}</p>
+          <h2 className="t-engraved drawer-title">Contents</h2>
+          <Hairline width={40} />
+        </div>
 
-          <nav className="flex-1 overflow-y-auto">
-            <ul className="space-y-0.5">
-              {tableOfContents.map((item) => (
-                <li key={item.label}>
+        <nav className="drawer-nav">
+          <ul>
+            {entries.map((entry) => {
+              const active = currentPageIndex >= entry.pageIndex;
+              return (
+                <li key={entry.label}>
                   <button
-                    onClick={() => handleNavigate(item.pageIndex)}
-                    className={`w-full text-left py-2.5 px-3 rounded-sm text-sm transition-colors duration-150
-                              ${currentPage === item.pageIndex
-                                ? 'bg-champagne/15 text-espresso font-medium'
-                                : 'text-warm-gray-dark hover:bg-cream hover:text-charcoal'}`}
+                    type="button"
+                    className={`drawer-link${active ? ' is-passed' : ''}`}
+                    onClick={() => onNavigate(entry.pageIndex)}
                   >
-                    <span className="text-meta text-gold-deep mr-3 text-[10px]">
-                      {String(item.pageIndex + 1).padStart(2, '0')}
+                    <span className="drawer-link-label">{entry.label}</span>
+                    <span className="leader" aria-hidden="true" />
+                    <span className="drawer-link-folio">
+                      {entry.folio !== null ? String(entry.folio).padStart(2, '0') : ''}
                     </span>
-                    {item.label}
                   </button>
                 </li>
-              ))}
-            </ul>
-          </nav>
+              );
+            })}
+          </ul>
+        </nav>
 
-          <div className="mt-4 pt-4 border-t border-espresso/10">
-            <p className="text-meta text-warm-gray-dark text-center text-[10px]">
-              Executive Hideaway Resort & Spa
-            </p>
-          </div>
+        <div className="drawer-foot">
+          <button type="button" className="drawer-close" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </>

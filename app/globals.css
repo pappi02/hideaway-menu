@@ -1,26 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+@import "./styles/book.css";
+
+/* ==========================================================================
+   Executive Hideaway — design tokens
+   Masculine, low-key luxury: obsidian ground, antique brass, oxblood accent.
+   The book page is a FIXED-SIZE canvas (see lib/layout.ts) scaled to the
+   viewport, so every length in here is a real design pixel.
+   ========================================================================== */
 
 @theme {
-  --color-charcoal: #1a1a1a;
-  --color-charcoal-light: #2a2a2a;
-  --color-ivory: #faf8f5;
-  --color-cream: #f5f0e8;
-  --color-paper: #f0ebe3;
-  --color-espresso: #3d2b1f;
-  --color-espresso-light: #5c4033;
-  --color-champagne: #c9a96e;
-  --color-champagne-muted: #b8956a;
-  --color-warm-gray: #8a8279;
-  --color-warm-gray-light: #b5ada4;
-  --color-warm-gray-dark: #5f584e;
-  --color-gold-deep: #7a5c26;
+  /* Ground — deep, warm-neutral blacks rather than pure grey */
+  --color-obsidian: #0a0a0b;
+  --color-onyx: #121214;
+  --color-graphite: #1a1b1e;
+  --color-smoke: #26282c;
+  --color-iron: #33363b;
 
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Metal — antique brass, the single luxury accent */
+  --color-brass: #b08d57;
+  --color-brass-bright: #d9bb87;
+  --color-brass-deep: #7d6335;
 
-  --shadow-page: 0 4px 20px rgba(0,0,0,0.15);
-  --shadow-page-hover: 0 8px 30px rgba(0,0,0,0.2);
+  /* Accent — oxblood, used sparingly for signatures */
+  --color-oxblood: #6b2320;
+
+  /* Paper — warm bone for the few light surfaces */
+  --color-bone: #e9e4d9;
+  --color-parchment: #d8d1c2;
+
+  /* Text on dark ground */
+  --color-ash: #9b978f;
+  --color-ash-dim: #6f6c66;
+  --color-ash-bright: #c6c2ba;
+
+  --font-display: var(--font-cinzel), 'Trajan Pro', Georgia, serif;
+  --font-serif: var(--font-cormorant), Georgia, 'Times New Roman', serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 @layer base {
@@ -31,96 +46,259 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--color-charcoal);
-    color: var(--color-charcoal);
+    background-color: var(--color-obsidian);
+    color: var(--color-ash-bright);
+    /* The book never scrolls — pagination guarantees every page fits. */
     overflow: hidden;
     touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
+  /* Visible focus for keyboard users, suppressed for pointer users. */
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 3px;
   }
 }
 
+/* ==========================================================================
+   Book mechanics
+   ========================================================================== */
+
 @layer components {
-  .page-paper {
-    background: linear-gradient(135deg, var(--color-ivory) 0%, var(--color-cream) 100%);
-    box-shadow: var(--shadow-page);
-  }
-
-  .book-viewport {
-    perspective: 1800px;
+  .book-stage {
+    perspective: 2800px;
+    perspective-origin: 50% 45%;
     transform-style: preserve-3d;
-    isolation: isolate;
-    touch-action: pan-y;
   }
 
-  .book-page-sheet {
-    width: 100%;
+  /* One physical leaf of the book: a recto (front) and a verso (back). */
+  .book-sheet {
+    position: absolute;
+    top: 0;
+    height: 100%;
     transform-origin: left center;
     transform-style: preserve-3d;
-    backface-visibility: hidden;
-    transition: transform 650ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    transition: transform var(--flip-duration, 900ms) cubic-bezier(0.645, 0.045, 0.355, 1);
     will-change: transform;
   }
 
-  .text-display {
-    font-family: var(--font-serif);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+  .book-sheet-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+    background: var(--color-onyx);
   }
 
-  .text-body {
-    font-family: var(--font-sans);
+  .book-sheet-face--back {
+    transform: rotateY(180deg);
+  }
+
+  /* Shading that sweeps across a leaf as it turns, so the paper reads as
+     a physical surface catching light rather than a flat div. */
+  .book-sheet-shade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 30;
+    opacity: 0;
+    transition: opacity var(--flip-duration, 900ms) cubic-bezier(0.645, 0.045, 0.355, 1);
+  }
+
+  .book-sheet-shade--front {
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.1) 42%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  .book-sheet-shade--back {
+    background: linear-gradient(270deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.1) 42%, rgba(0, 0, 0, 0) 100%);
+    opacity: 1;
+  }
+
+  .book-sheet[data-turned='true'] .book-sheet-shade--front {
+    opacity: 1;
+  }
+
+  .book-sheet[data-turned='true'] .book-sheet-shade--back {
+    opacity: 0;
+  }
+
+  /* The gutter: where the leaves meet the spine, paper curves away from
+     the light. Painted on every page so a spread reads as one object. */
+  .page-gutter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 74px;
+    pointer-events: none;
+    z-index: 25;
+  }
+
+  .page-gutter--recto {
+    left: 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.22) 35%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  .page-gutter--verso {
+    right: 0;
+    background: linear-gradient(270deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.22) 35%, rgba(0, 0, 0, 0) 100%);
+  }
+
+  /* The stitched spine sitting between the two halves of a spread. */
+  .book-spine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    margin-left: -1.5px;
+    z-index: 60;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.35) 40%,
+      rgba(217, 187, 135, 0.14) 50%,
+      rgba(0, 0, 0, 0.35) 60%,
+      rgba(0, 0, 0, 0.85) 100%
+    );
+  }
+
+  /* Stacked-paper edge, so the closed book has visible thickness. */
+  .book-edge {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    width: 10px;
+    z-index: 5;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(233, 228, 217, 0.16) 0px,
+      rgba(233, 228, 217, 0.16) 1px,
+      rgba(0, 0, 0, 0.5) 1px,
+      rgba(0, 0, 0, 0.5) 3px
+    );
+  }
+}
+
+/* ==========================================================================
+   Page surfaces
+   ========================================================================== */
+
+@layer components {
+  /* Dark leather-and-ink stock — the default for this book. */
+  .surface-onyx {
+    background-color: var(--color-onyx);
+    background-image:
+      radial-gradient(ellipse 120% 80% at 50% 0%, rgba(176, 141, 87, 0.07) 0%, transparent 62%),
+      linear-gradient(168deg, #1a1b1e 0%, #121214 46%, #0c0c0e 100%);
+  }
+
+  /* Warm bone stock, used for the contents and a few quiet spreads. */
+  .surface-bone {
+    background-color: var(--color-bone);
+    background-image: linear-gradient(168deg, #efeae0 0%, #e4ded2 55%, #d8d1c2 100%);
+    color: var(--color-obsidian);
+  }
+
+  /* Fine grain over any surface — keeps large flat areas from banding. */
+  .surface-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+}
+
+/* ==========================================================================
+   Typography — sized in design pixels, never in viewport units
+   ========================================================================== */
+
+@layer components {
+  /* Engraved capitals: chapter titles and the monogram. */
+  .t-engraved {
+    font-family: var(--font-display);
     font-weight: 400;
-    line-height: 1.6;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.15;
   }
 
-  .text-meta {
+  /* Small caps label above a title — the "eyebrow". */
+  .t-eyebrow {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  /* Dish names: a high-contrast serif reads as menu, not as UI. */
+  .t-dish {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 19px;
+    letter-spacing: 0.005em;
+    line-height: 1.2;
+  }
+
+  /* Dish descriptions: quiet, low-contrast, never competing with the name. */
+  .t-note {
     font-family: var(--font-sans);
     font-weight: 300;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 12.5px;
+    line-height: 1.5;
+    letter-spacing: 0.005em;
   }
 
-  .price {
-    font-family: var(--font-sans);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-  }
-
-  .menu-item-name {
-    font-family: var(--font-sans);
-    font-weight: 600;
-    font-size: 0.9375rem;
-    letter-spacing: -0.01em;
-  }
-
-  .menu-item-desc {
+  .t-price {
     font-family: var(--font-sans);
     font-weight: 400;
-    font-size: 0.8125rem;
-    line-height: 1.5;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
   }
 
-  .page-edge {
-    box-shadow:
-      inset -1px 0 2px rgba(0,0,0,0.05),
-      inset 1px 0 2px rgba(255,255,255,0.3);
+  .t-prose {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.65;
   }
 
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  /* The dotted leader between a dish name and its price. */
+  .leader {
+    flex: 1 1 auto;
+    height: 1px;
+    margin: 0 10px 5px;
+    border-bottom: 1px dotted currentColor;
+    opacity: 0.28;
   }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
+}
+
+/* ==========================================================================
+   Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .book-sheet {
+    transition-duration: 1ms !important;
+  }
+
+  .book-sheet-shade {
+    transition-duration: 1ms !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
