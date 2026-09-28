@@ -1,4 +1,5 @@
-import type { Chapter, Dish } from '../types/menu';
+﻿import type { Chapter, Dish } from '../types/menu';
+import { assetPath } from '../lib/basePath';
 
 /**
  * The menu, authored as chapters.
@@ -25,7 +26,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter One',
     title: 'The First Hour',
     standfirst: 'Breakfast, served from seven until eleven',
-    image: '/images/menu/breakfast.jpg',
+    image: assetPath('/images/menu/breakfast.jpg'),
     note: 'Eggs are free-range. Coffee is single-origin Kenyan, roasted in Nairobi and ground to order.',
     columns: 1,
     sections: [
@@ -74,7 +75,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Two',
     title: 'To Begin',
     standfirst: 'Small plates and green things',
-    image: '/images/menu/starters.jpg',
+    image: assetPath('/images/menu/starters.jpg'),
     note: 'Best taken at the bar, with something cold, while the table is being set.',
     columns: 2,
     sections: [
@@ -109,7 +110,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Three',
     title: 'Kenyan Classics',
     standfirst: 'Recipes that did not need improving',
-    image: '/images/menu/kenyan-classics.jpg',
+    image: assetPath('/images/menu/kenyan-classics.jpg'),
     note: 'Cooked the long way, in heavy pots, the way they are cooked at home.',
     columns: 1,
     sections: [
@@ -135,7 +136,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Four',
     title: 'From the Grill',
     standfirst: 'Prime cuts over open flame',
-    image: '/images/menu/grill.jpg',
+    image: assetPath('/images/menu/grill.jpg'),
     note: 'All cuts are aged, seasoned simply and cooked over charcoal. Ask for it rare; the kitchen will thank you.',
     // Two columns keeps the cuts and the braises on one spread. At one column
     // the chapter runs to a second page that is barely a quarter full.
@@ -174,7 +175,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Five',
     title: 'Sea & Coast',
     standfirst: 'Brought up from Mombasa',
-    image: '/images/menu/seafood.jpg',
+    image: assetPath('/images/menu/seafood.jpg'),
     note: 'Fish arrives twice weekly from the coast. When it is gone, it is gone.',
     columns: 1,
     sections: [
@@ -198,7 +199,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Six',
     title: 'The Counter',
     standfirst: 'Pasta, pizza and things in buns',
-    image: '/images/menu/counter.jpg',
+    image: assetPath('/images/menu/counter.jpg'),
     note: 'Dough is proved for forty-eight hours. Patties are ground in-house each morning.',
     columns: 2,
     sections: [
@@ -290,7 +291,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Eight',
     title: 'To Finish',
     standfirst: 'For those with the room',
-    image: '/images/menu/desserts.jpg',
+    image: assetPath('/images/menu/desserts.jpg'),
     note: 'Pastry is made in-house daily. The fondant takes fourteen minutes; order it with your main.',
     columns: 1,
     sections: [
@@ -315,7 +316,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Nine',
     title: 'The Bar',
     standfirst: 'Coffee, tea and cold things',
-    image: '/images/menu/bar.jpg',
+    image: assetPath('/images/menu/bar.jpg'),
     note: 'Beans are Kenyan AA, roasted weekly. Juice is pressed to order, never from concentrate.',
     columns: 2,
     sections: [
@@ -384,7 +385,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Ten',
     title: 'The Spa',
     standfirst: 'Restore. Rebalance. Renew.',
-    image: '/images/menu/spa.jpg',
+    image: assetPath('/images/menu/spa.jpg'),
     note: 'Treatments are by appointment. Arrive fifteen minutes early; the steam room is yours beforehand.',
     columns: 1,
     sections: [
@@ -418,7 +419,7 @@ export const chapters: Chapter[] = [
     eyebrow: 'Chapter Eleven',
     title: 'The Barber',
     standfirst: 'The executive standard',
-    image: '/images/menu/grooming.jpg',
+    image: assetPath('/images/menu/grooming.jpg'),
     note: 'Hot towels, a straight razor and an unhurried chair. Walk in, or reserve the chair.',
     columns: 1,
     sections: [

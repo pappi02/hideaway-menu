@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { venue } from './data/venue';
+import { assetPath } from './lib/basePath';
 import './globals.css';
 
 /**
@@ -80,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* The cover is the first thing anyone sees after scanning the QR code,
             and it is a CSS background, so the browser cannot discover it until
             the stylesheet has parsed. Preloading it removes that round trip. */}
-        <link rel="preload" as="image" href="/images/menu/cover.jpg" />
+        <link rel="preload" as="image" href={assetPath('/images/menu/cover.jpg')} />
       </head>
       <body>{children}</body>
     </html>

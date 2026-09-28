@@ -1,8 +1,9 @@
-import { chapters } from './menu';
+﻿import { chapters } from './menu';
 import { venue } from './venue';
 import { columnHeight, flowChapter, type FlowedPage } from '../lib/paginate';
 import { SINGLE, SPREAD, columnsFor, contentHeight, type PageMetrics } from '../lib/metrics';
 import type { BookPage, ContentsEntry, Sheet } from '../types/menu';
+import { assetPath } from '../lib/basePath';
 
 /** Slack below which a page is left top-aligned rather than optically centred. */
 const CENTRE_THRESHOLD = 130;
@@ -68,7 +69,7 @@ function buildBook(metrics: PageMetrics): Book {
     } as BookPage);
   };
 
-  push({ id: 'cover', kind: 'cover', stock: 'onyx', image: '/images/menu/cover.jpg' });
+  push({ id: 'cover', kind: 'cover', stock: 'onyx', image: assetPath('/images/menu/cover.jpg') });
 
   push({
     id: 'welcome',
@@ -80,7 +81,7 @@ function buildBook(metrics: PageMetrics): Book {
       'This is a kitchen without shortcuts. Stock is simmered overnight, bread is proved here, ' +
       'the fish comes up from the coast twice a week, and the beef is aged before it ever sees ' +
       'the fire. Take your time with it. Nothing here is in a hurry, and neither are you.',
-    image: '/images/menu/welcome.jpg',
+    image: assetPath('/images/menu/welcome.jpg'),
   });
 
   // Placeholder; entries are filled once every chapter has a page index.
@@ -137,7 +138,7 @@ function buildBook(metrics: PageMetrics): Book {
       id: 'plate',
       kind: 'plate',
       stock: 'onyx',
-      image: '/images/menu/resort.jpg',
+      image: assetPath('/images/menu/resort.jpg'),
       caption: `${venue.name} ${venue.descriptor} · ${venue.city}`,
     });
   }

@@ -2,6 +2,7 @@ import type { ContactPage as ContactPageType } from '../../types/menu';
 import { venue, whatsappLink } from '../../data/venue';
 import { Monogram, Rule } from '../Ornament';
 import { PageFrame } from './PageFrame';
+import { assetPath } from '../../lib/basePath';
 
 export function ContactPage({ page }: { page: ContactPageType }) {
   return (
@@ -9,7 +10,7 @@ export function ContactPage({ page }: { page: ContactPageType }) {
       {/* The hotel's own shot of the property, kept as the closing image. */}
       <div
         className="page-wash page-wash--strong"
-        style={{ backgroundImage: 'url(/images/menu/resort.jpg)' }}
+        style={{ backgroundImage: `url(${assetPath('/images/menu/resort.jpg')})` }}
         aria-hidden="true"
       />
 
